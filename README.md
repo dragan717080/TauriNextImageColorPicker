@@ -5,7 +5,7 @@ This app uses **pnpm** as the Node.js dependency
 manager. Performant thanks to Rust on the backend, good looking
 with Next.js/Tailwind/Shadcn. Also you need Rust to run this app.
 
-https://github.com/dragan717080/TauriNextImageColorPicker/assets/135660124/dfd69d4d-55ec-4846-8be8-3da107e24ce6
+https://github.com/dragan717080/TauriNextImageColorPicker/assets/135660124/8e358611-cc99-48bb-a47b-61e14a43d57a
 
 
 ## <a name="no-link"></a>Technologies Used

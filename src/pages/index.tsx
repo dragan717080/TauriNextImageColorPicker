@@ -1,13 +1,15 @@
 import { invoke } from "@tauri-apps/api/tauri"
 import { ClickCoordinates, ColorValues } from "interfaces/ImageColorPicker"
+import { ImageDefaultPickerRGBA } from "interfaces/ImageDefaultPicker"
 import type { NextPage } from "next"
 import Head from "next/head"
 import Image from "next/image"
 import { MouseEvent, useEffect, useRef, useState } from "react"
+import { SketchPicker } from "react-color"
 
 import Footer from "@/components/Footer"
 import { Button } from "@/components/ui/button"
-import { CopyToClipboardSvg, CorrectSignSvg } from "@/constants/svgs"
+import { CopyToClipboardSvg, CorrectIconSvg, UploadIconSvg } from "@/constants/svgs"
 
 const Home: NextPage = () => {
   const [activeHexColor, setActiveHexColor] = useState<string>("#ADBDBA")
@@ -16,6 +18,7 @@ const Home: NextPage = () => {
   const [base64Img, setBase64Img] = useState("/assets/images/img1.webp")
 
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
+  const [activeVariant, setActiveVariant] = useState<"IMAGE" | "DEFAULT">("IMAGE")
 
   const onImageClick = (coordinates: ClickCoordinates) => {
     invoke<string>("on_image_clicked", { imageDetails: coordinates })
@@ -38,7 +41,6 @@ const Home: NextPage = () => {
 
       invoke<string>("on_image_uploaded", { base64Image })
         .then((value) => {
-          console.log(value.slice(9))
           setBase64Img(`${value.slice(9)}?timestamp=${Date.now()}`)
         })
         .catch((err) => {
@@ -47,6 +49,11 @@ const Home: NextPage = () => {
     }
 
     reader.readAsDataURL(file)
+  }
+
+  // Format RGB string from sketch picker to display it
+  const formatRGBString = (rgb: ImageDefaultPickerRGBA) => {
+    setActiveRGB(`(${rgb.r}, ${rgb.g}, ${rgb.b})`)
   }
 
   const [hexIsCopiedToClipboard, setHexIsCopiedToClipboard] = useState(false)
@@ -124,20 +131,42 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="row">
-        <h1 className="bold text-xl mt-40 mb-16">Pick your color from image</h1>
+      <div className="row bold text-xl mt-40 mb-16 gap-3">
+        <div className="pointer" onClick={() => setActiveVariant("IMAGE")}>
+          <UploadIconSvg />
+        </div>
+        <Image
+          src="/assets/images/swatch.png"
+          height={48}
+          width={48}
+          alt="Color Picker"
+          onClick={() => setActiveVariant("DEFAULT")}
+        />
       </div>
 
       <main className="flex-1 flex-col items-center justify-center py-8">
         <section className="row gap-16 max-h-[17.5rem]">
-          <Image
-            src={base64Img}
-            height={400}
-            width={500}
-            style={{ maxHeight: "280px", maxWidth: "500px" }}
-            alt="Uploaded Image"
-            onClick={(e) => handleImageClick(e)}
-          />
+          {activeVariant === "IMAGE" && (
+            <Image
+              src={base64Img}
+              height={400}
+              width={500}
+              style={{ maxHeight: "280px", maxWidth: "500px" }}
+              alt="Uploaded Image"
+              onClick={(e) => handleImageClick(e)}
+            />
+          )}
+          {activeVariant === "DEFAULT" && (
+            <SketchPicker
+              color={activeHexColor}
+              disableAlpha
+              onChange={(color) => {
+                setActiveHexColor(color.hex.toUpperCase())
+                formatRGBString(color.rgb)
+              }}
+              className="scale-y-125 scale-x-125 ml-12"
+            />
+          )}
           <div>
             {/* Color Finder */}
             <div className="col-v gap-4">
@@ -161,7 +190,7 @@ const Home: NextPage = () => {
                   {!hexIsCopiedToClipboard ? (
                     <CopyToClipboardSvg onClickFunction={(e) => copyToClipboard(e)} />
                   ) : (
-                    <CorrectSignSvg />
+                    <CorrectIconSvg />
                   )}
                 </div>
               </div>
@@ -175,7 +204,7 @@ const Home: NextPage = () => {
                   {!RGBIsCopiedToClipboard ? (
                     <CopyToClipboardSvg onClickFunction={(e) => copyToClipboard(e)} />
                   ) : (
-                    <CorrectSignSvg />
+                    <CorrectIconSvg />
                   )}
                 </div>
               </div>
@@ -193,7 +222,9 @@ const Home: NextPage = () => {
               <p className="mt-2 text-gray-500 text-xs truncate">
                 {file === "" ? "No file selected" : (file as File).name}
               </p>
-              <Button onClick={handleUploadClick}>Use your image</Button>
+              {activeVariant === "IMAGE" && (
+                <Button onClick={handleUploadClick}>Use your image</Button>
+              )}
             </div>
           </div>
         </section>
