@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri"
+import { ClickCoordinates, ColorValues } from "interfaces/ImageColorPicker"
 import type { NextPage } from "next"
 import Head from "next/head"
 import Image from "next/image"
@@ -15,17 +16,6 @@ const Home: NextPage = () => {
   const [base64Img, setBase64Img] = useState("/assets/images/img1.webp")
 
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
-
-  interface ClickCoordinates {
-    imageSrc: string
-    imageDimensions: { x: number; y: number }
-    relativeCoordinates: { x: number; y: number }
-  }
-
-  interface ColorValues {
-    hex: string
-    rgb: string
-  }
 
   const onImageClick = (coordinates: ClickCoordinates) => {
     invoke<string>("on_image_clicked", { imageDetails: coordinates })
@@ -44,11 +34,12 @@ const Home: NextPage = () => {
     reader.onload = (e) => {
       const base64Image = e.target?.result as string
 
-      setBase64Img(base64Image)
+      setBase64Img(`${base64Img}?timestamp=${Date.now()}`)
 
       invoke<string>("on_image_uploaded", { base64Image })
         .then((value) => {
-          setBase64Img(value.slice(9))
+          console.log(value.slice(9))
+          setBase64Img(`${value.slice(9)}?timestamp=${Date.now()}`)
         })
         .catch((err) => {
           console.error(err)
@@ -144,8 +135,7 @@ const Home: NextPage = () => {
             height={400}
             width={500}
             style={{ maxHeight: "280px", maxWidth: "500px" }}
-            alt="moose"
-            title="moose"
+            alt="Uploaded Image"
             onClick={(e) => handleImageClick(e)}
           />
           <div>
